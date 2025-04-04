@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "2476222804",
+    "project_id": "velocareapp",
+    "storage_bucket": "velocareapp.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:2476222804:android:420f9850bf78a7a45580c1",
+        "android_client_info": {
+          "package_name": "com.example.velo_care"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBmT2VoR5ahXTOuliuR9P-WGGgLF5_sj5Y"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

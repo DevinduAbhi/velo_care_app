@@ -1,26 +1,32 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'login_screen.dart'; // Import the LoginScreen
-import 'home_screen.dart'; // Import the HomeScreen
-import 'dashboard.dart'; // Import the DashboardScreen
-import 'services_screen.dart'; // Import the ServicesScreen
+import 'package:velo_care/firebase_options.dart';
+import 'login_screen.dart';
+import 'home_screen.dart';
+import 'dashboard.dart';
+import 'services_screen.dart';
 
-void main() {
-  runApp(MyApp());
+Future<void> main() async {
+  WidgetsFlutterBinding
+      .ensureInitialized(); // Important for async initialization
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+  runApp(MyApp()); // This should be outside of Firebase.initializeApp
 }
 
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      debugShowCheckedModeBanner: false, // Remove debug banner
-      title: 'Velo Care', // App title
-      initialRoute: '/', // Set the initial route to LoginScreen
+      debugShowCheckedModeBanner: false,
+      title: 'Velo Care',
+      initialRoute: '/',
       routes: {
-        '/': (context) => LoginScreen(), // Route for LoginScreen
-        '/home': (context) => HomeScreen(), // Route for HomeScreen
-        '/dashboard': (context) =>
-            DashboardScreen(), // Route for DashboardScreen
-        '/services': (context) => ServicesScreen(), // Route for ServicesScreen
+        '/': (context) => LoginScreen(),
+        '/home': (context) => HomeScreen(),
+        '/dashboard': (context) => DashboardScreen(),
+        '/services': (context) => ServicesScreen(),
       },
     );
   }
