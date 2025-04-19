@@ -1,7 +1,7 @@
 name: velo_care
 description: "A new Flutter project."
 
-publish_to: 'none' 
+publish_to: 'none'
 
 version: 1.0.0+1
 
@@ -11,22 +11,56 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-    
 
+  # Core Flutter
   cupertino_icons: ^1.0.6
+  intl: ^0.18.1  
+  path: ^1.8.2
+
+  # Firebase
   firebase_core: ^3.13.0
+  firebase_auth: ^5.5.2
+  firebase_storage: ^12.4.5
+  cloud_firestore: ^5.6.6
+  firebase_app_check: ^0.3.2+5
+
+  # Maps & Location (Updated)
+  flutter_map: ^5.0.0       # Updated to v5 (supports latlong2 ^0.9.0)
+  latlong2: ^0.9.0          # Kept at latest stable
+  geolocator: ^9.0.2 
+  flutter_typeahead: ^5.2.0
+
+  # Media & Networking (Updated)
+  image_picker: ^0.8.7+3
+  cached_network_image: ^3.2.3
+  url_launcher: ^6.1.11
+  http: ^1.0.0              # Upgraded for flutter_map 5.x
+
+  # Bluetooth
+  flutter_blue_plus: ^1.0.0
+
+  # UI Components
+  table_calendar: ^3.0.9
+
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-
-  flutter_lints: ^3.0.0
+  flutter_lints: ^2.0.0  
 
 flutter:
   uses-material-design: true
 
   assets:
     - assets/car.jpg
-    
-
-  
+    - assets/logo.png
+    - assets/document.png
+    - assets/maintenance.png
+    - assets/mechanic.png
+    - assets/obd.png
+    - assets/reminders.png
+    - assets/services.png
+    - assets/tips.png
+    - assets/contact_us.png
+    - assets/help_support.png
+    - assets/loginbac.jpg
