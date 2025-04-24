@@ -4,7 +4,7 @@ import 'dashboard/obd.dart';
 import 'dashboard/reminders.dart';
 import 'dashboard/services_screen.dart';
 import 'dashboard/tips.dart';
-//import 'dashboard/mechanic_finder_screen.dart';
+import 'dashboard/mechanic_finder_screen.dart';
 
 class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key});
@@ -48,7 +48,7 @@ class DashboardScreen extends StatelessWidget {
                 context,
                 "assets/mechanic.png",
                 "Mechanic Finder",
-                //navigateTo: const MechanicFinderScreen(),
+                navigateTo: const MechanicFinderScreen(),
               ),
               _buildDashboardItem(
                 context,

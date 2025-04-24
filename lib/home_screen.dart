@@ -6,6 +6,7 @@ import 'vehicles/add_vehicle_screen.dart';
 import 'dashboard.dart';
 import 'settings_screen.dart';
 import 'themes/theme_notifier.dart';
+import 'stats.dart'; // Import the stats screen
 
 class HomePage extends StatefulWidget {
   final ThemeNotifier themeNotifier;
@@ -176,7 +177,7 @@ class _HomeScreenState extends State<HomePage> {
               index: _selectedIndex,
               children: [
                 _buildGarageView(),
-                _buildStatsView(),
+                const StatsScreen(),
                 DashboardScreen(),
                 SettingsScreen(themeNotifier: widget.themeNotifier),
               ],
@@ -600,38 +601,6 @@ class _HomeScreenState extends State<HomePage> {
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildStatsView() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.analytics,
-            size: 60,
-            color: Theme.of(context).primaryColor,
-          ),
-          const SizedBox(height: 20),
-          Text(
-            "Statistics",
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: Theme.of(context).textTheme.titleLarge?.color,
-            ),
-          ),
-          const SizedBox(height: 10),
-          Text(
-            "Coming soon...",
-            style: TextStyle(
-              fontSize: 16,
-              color: Theme.of(context).textTheme.bodyMedium?.color,
-            ),
-          ),
-        ],
       ),
     );
   }
