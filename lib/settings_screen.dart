@@ -61,7 +61,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isDarkMode = widget.themeNotifier.value == ThemeMode.dark;
+    final isDarkMode = widget.themeNotifier.themeMode ==
+        ThemeMode.dark; // Changed from .value to .themeMode
     final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(

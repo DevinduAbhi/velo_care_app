@@ -1,5 +1,5 @@
 name: velo_care
-description: "A new Flutter project."
+description: "A Flutter application for vehicle maintenance and care."
 
 publish_to: 'none'
 
@@ -14,7 +14,7 @@ dependencies:
 
   # Core Flutter
   cupertino_icons: ^1.0.6
-  intl: ^0.18.1  
+  intl: ^0.20.2
   path: ^1.8.2
 
   # Firebase
@@ -24,29 +24,34 @@ dependencies:
   cloud_firestore: ^5.6.6
   firebase_app_check: ^0.3.2+5
 
-  # Maps & Location (Updated)
-  flutter_map: ^5.0.0       # Updated to v5 (supports latlong2 ^0.9.0)
-  latlong2: ^0.9.0          # Kept at latest stable
-  geolocator: ^9.0.2 
+  # UI & Forms
   flutter_typeahead: ^5.2.0
+  table_calendar: ^3.0.9
+  provider: ^6.0.5
+  shimmer: ^3.0.0  
 
-  # Media & Networking (Updated)
-  image_picker: ^0.8.7+3
+  # Media & Networking
+  image_picker: ^1.0.4
   cached_network_image: ^3.2.3
   url_launcher: ^6.1.11
-  http: ^1.0.0              # Upgraded for flutter_map 5.x
+  http: ^1.1.0
+  flutter_svg: ^2.0.7
 
-  # Bluetooth
-  flutter_blue_plus: ^1.0.0
+  # OBD-II & Bluetooth
+  flutter_reactive_ble: ^5.0.3  
+  permission_handler: ^12.0.0+1 
+  percent_indicator: ^4.2.3  
+  syncfusion_flutter_gauges: ^29.1.39 
 
-  # UI Components
-  table_calendar: ^3.0.9
-
+  # Utility
+  uuid: ^4.5.1 
+  equatable: ^2.0.5  
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^2.0.0  
+  flutter_lints: ^5.0.0
+  flutter_launcher_icons: ^0.14.3
 
 flutter:
   uses-material-design: true
@@ -57,10 +62,10 @@ flutter:
     - assets/document.png
     - assets/maintenance.png
     - assets/mechanic.png
-    - assets/obd.png
     - assets/reminders.png
     - assets/services.png
     - assets/tips.png
     - assets/contact_us.png
     - assets/help_support.png
     - assets/loginbac.jpg
+    - assets/obd.png

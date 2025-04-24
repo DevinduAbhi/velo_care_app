@@ -32,7 +32,7 @@ android {
 
     defaultConfig {
         applicationId "com.example.velo_care"
-        minSdkVersion 23 // 🔧 Updated to meet Firebase Auth requirements
+        minSdkVersion 23 
         targetSdkVersion flutter.targetSdkVersion
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName

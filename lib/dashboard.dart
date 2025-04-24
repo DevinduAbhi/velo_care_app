@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'dashboard/storage.dart';
 import 'dashboard/obd.dart';
 import 'dashboard/reminders.dart';
-import 'dashboard/mechanic_finder_screen.dart';
+import 'dashboard/services_screen.dart';
+import 'dashboard/tips.dart';
+//import 'dashboard/mechanic_finder_screen.dart';
 
 class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key});
@@ -46,7 +48,7 @@ class DashboardScreen extends StatelessWidget {
                 context,
                 "assets/mechanic.png",
                 "Mechanic Finder",
-                navigateTo: const MechanicFinderScreen(),
+                //navigateTo: const MechanicFinderScreen(),
               ),
               _buildDashboardItem(
                 context,
@@ -60,16 +62,10 @@ class DashboardScreen extends StatelessWidget {
                 "OBD II Integration",
                 navigateTo: const OBDPage(),
               ),
-              _buildDashboardItem(
-                context,
-                "assets/tips.png",
-                "Car Care Tips",
-              ),
-              _buildDashboardItem(
-                context,
-                "assets/services.png",
-                "Services",
-              ),
+              _buildDashboardItem(context, "assets/tips.png", "Car Care Tips",
+                  navigateTo: const CarTipsPage()),
+              _buildDashboardItem(context, "assets/services.png", "Services",
+                  navigateTo: const ServicesScreen()),
             ],
           ),
         ),
@@ -121,7 +117,7 @@ class DashboardScreen extends StatelessWidget {
                   height: 40,
                   width: 40,
                   fit: BoxFit.contain,
-                  color: null, // Remove color tint to maintain original colors
+                  color: null,
                 ),
               ),
               const SizedBox(height: 12),

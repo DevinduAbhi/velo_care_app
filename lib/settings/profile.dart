@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
+import 'package:shimmer/shimmer.dart';
 
 class ProfileScreen extends StatefulWidget {
   @override
@@ -20,6 +21,7 @@ class _ProfileScreenState extends State<ProfileScreen>
   File? _profileImage;
   bool _isLoading = false;
   bool _isEditing = false;
+  bool _isInitialLoading = true;
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
 
@@ -59,7 +61,10 @@ class _ProfileScreenState extends State<ProfileScreen>
   }
 
   Future<void> _loadUserData() async {
-    setState(() => _isLoading = true);
+    setState(() {
+      _isLoading = true;
+      _isInitialLoading = true;
+    });
     try {
       final user = _auth.currentUser;
       if (user != null) {
@@ -74,7 +79,10 @@ class _ProfileScreenState extends State<ProfileScreen>
     } catch (e) {
       _showErrorSnackbar('Error loading profile: $e');
     }
-    setState(() => _isLoading = false);
+    setState(() {
+      _isLoading = false;
+      _isInitialLoading = false;
+    });
   }
 
   Future<void> _updateProfile() async {
@@ -256,6 +264,66 @@ class _ProfileScreenState extends State<ProfileScreen>
     );
   }
 
+  Widget _buildShimmerLoading() {
+    return Shimmer.fromColors(
+      baseColor: Colors.grey[300]!,
+      highlightColor: Colors.grey[100]!,
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            const SizedBox(height: 20),
+            Container(
+              width: 120,
+              height: 120,
+              decoration: const BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white,
+              ),
+            ),
+            const SizedBox(height: 30),
+            Container(
+              width: 200,
+              height: 24,
+              color: Colors.white,
+            ),
+            const SizedBox(height: 5),
+            Container(
+              width: 150,
+              height: 18,
+              color: Colors.white,
+            ),
+            const SizedBox(height: 30),
+            Container(
+              height: 60,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(12),
+                color: Colors.white,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Container(
+              height: 60,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(12),
+                color: Colors.white,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Container(
+              height: 60,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(12),
+                color: Colors.white,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -267,25 +335,26 @@ class _ProfileScreenState extends State<ProfileScreen>
         centerTitle: true,
         elevation: 0,
         actions: [
-          IconButton(
-            icon: AnimatedSwitcher(
-              duration: const Duration(milliseconds: 300),
-              child: _isEditing
-                  ? const Icon(Icons.save, key: ValueKey('save'))
-                  : const Icon(Icons.edit, key: ValueKey('edit')),
+          if (!_isInitialLoading)
+            IconButton(
+              icon: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 300),
+                child: _isEditing
+                    ? const Icon(Icons.save, key: ValueKey('save'))
+                    : const Icon(Icons.edit, key: ValueKey('edit')),
+              ),
+              onPressed: _isEditing
+                  ? _updateProfile
+                  : () {
+                      setState(() => _isEditing = true);
+                      _animationController.reset();
+                      _animationController.forward();
+                    },
             ),
-            onPressed: _isEditing
-                ? _updateProfile
-                : () {
-                    setState(() => _isEditing = true);
-                    _animationController.reset();
-                    _animationController.forward();
-                  },
-          ),
         ],
       ),
-      body: _isLoading && !_isEditing
-          ? const Center(child: CircularProgressIndicator())
+      body: _isInitialLoading
+          ? _buildShimmerLoading()
           : FadeTransition(
               opacity: _fadeAnimation,
               child: SingleChildScrollView(
