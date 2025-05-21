@@ -5,6 +5,7 @@ import 'dashboard/reminders.dart';
 import 'dashboard/services_screen.dart';
 import 'dashboard/tips.dart';
 import 'dashboard/mechanic_finder_screen.dart';
+import 'dashboard/insurance_tracker.dart';
 
 class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key});
@@ -62,10 +63,25 @@ class DashboardScreen extends StatelessWidget {
                 "OBD II Integration",
                 navigateTo: const OBDPage(),
               ),
-              _buildDashboardItem(context, "assets/tips.png", "Car Care Tips",
-                  navigateTo: const CarTipsPage()),
-              _buildDashboardItem(context, "assets/services.png", "Services",
-                  navigateTo: const ServicesScreen()),
+              _buildDashboardItem(
+                context,
+                "assets/tips.png",
+                "Car Care Tips",
+                navigateTo: const CarTipsPage(),
+              ),
+              _buildDashboardItem(
+                context,
+                "assets/services.png",
+                "Services",
+                navigateTo: const ServicesScreen(),
+              ),
+              // Add the new Insurance Tracker item
+              _buildDashboardItem(
+                context,
+                "assets/insurance_icon.png", // Make sure this asset exists
+                "Insurance Tracker",
+                navigateTo: const InsuranceTrackerScreen(),
+              ),
             ],
           ),
         ),

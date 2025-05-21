@@ -10,7 +10,9 @@ class ServicesScreen extends StatefulWidget {
   State<ServicesScreen> createState() => _ServicesScreenState();
 }
 
-class _ServicesScreenState extends State<ServicesScreen> {
+class _ServicesScreenState extends State<ServicesScreen>
+    with SingleTickerProviderStateMixin {
+  late TabController _tabController;
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _costController = TextEditingController();
   final TextEditingController _mileageController = TextEditingController();
@@ -29,7 +31,14 @@ class _ServicesScreenState extends State<ServicesScreen> {
   ];
 
   @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 2, vsync: this);
+  }
+
+  @override
   void dispose() {
+    _tabController.dispose();
     _costController.dispose();
     _mileageController.dispose();
     _noteController.dispose();
@@ -38,6 +47,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
     super.dispose();
   }
 
+  // KEEPING ALL ORIGINAL FIREBASE METHODS EXACTLY THE SAME
   Future<void> _selectDate(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
       context: context,
@@ -47,14 +57,14 @@ class _ServicesScreenState extends State<ServicesScreen> {
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(
-              primary: Color(0xFF4CAF50),
-              onPrimary: Colors.white,
-              onSurface: Colors.black,
+            colorScheme: ColorScheme.light(
+              primary: Theme.of(context).colorScheme.primary,
+              onPrimary: Theme.of(context).colorScheme.onPrimary,
+              onSurface: Theme.of(context).colorScheme.onSurface,
             ),
             textButtonTheme: TextButtonThemeData(
               style: TextButton.styleFrom(
-                foregroundColor: const Color(0xFF4CAF50),
+                foregroundColor: Theme.of(context).colorScheme.primary,
               ),
             ),
           ),
@@ -91,19 +101,28 @@ class _ServicesScreenState extends State<ServicesScreen> {
 
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Service note saved successfully!'),
-            backgroundColor: Colors.green,
+          SnackBar(
+            content: const Text('Service note saved successfully!'),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+            backgroundColor: Theme.of(context).colorScheme.primary,
           ),
         );
 
         _clearForm();
+        _tabController.animateTo(1);
       } catch (e) {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Error: ${e.toString()}'),
-            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+            backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );
       }
@@ -128,9 +147,13 @@ class _ServicesScreenState extends State<ServicesScreen> {
           .delete();
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Service note deleted'),
-          backgroundColor: Colors.green,
+        SnackBar(
+          content: const Text('Service note deleted'),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+          backgroundColor: Theme.of(context).colorScheme.primary,
         ),
       );
     } catch (e) {
@@ -138,12 +161,17 @@ class _ServicesScreenState extends State<ServicesScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Error deleting: $e'),
-          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+          backgroundColor: Theme.of(context).colorScheme.error,
         ),
       );
     }
   }
 
+  // ORIGINAL FIREBASE QUERY - UNCHANGED
   Stream<QuerySnapshot> _getServicesStream() {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return const Stream.empty();
@@ -174,66 +202,85 @@ class _ServicesScreenState extends State<ServicesScreen> {
     return docs;
   }
 
+  // MODERN UI COMPONENTS
   Widget _buildServiceCard(QueryDocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
 
     return Card(
+      elevation: 2,
       margin: const EdgeInsets.only(bottom: 16),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  data['serviceType'] ?? 'Unknown Service',
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF4CAF50),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: () {},
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Text(
+                      data['serviceType'] ?? 'Unknown Service',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                    ),
                   ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.delete, color: Colors.red),
-                  onPressed: () => _deleteService(doc.id),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                const Icon(Icons.calendar_today, size: 16, color: Colors.grey),
-                const SizedBox(width: 8),
-                Text(data['serviceDate'] ?? 'No date'),
-              ],
-            ),
-            const SizedBox(height: 4),
-            Row(
-              children: [
-                const Icon(Icons.attach_money, size: 16, color: Colors.grey),
-                const SizedBox(width: 8),
-                Text('${data['cost']?.toString() ?? '0'} LKR'),
-              ],
-            ),
-            const SizedBox(height: 4),
-            Row(
-              children: [
-                const Icon(Icons.speed, size: 16, color: Colors.grey),
-                const SizedBox(width: 8),
-                Text('${data['mileage']?.toString() ?? '0'} km'),
-              ],
-            ),
-            if (data['note'] != null && data['note'].isNotEmpty) ...[
+                  IconButton(
+                    icon: Icon(Icons.delete_outlined,
+                        color: Theme.of(context).colorScheme.error),
+                    onPressed: () => _deleteService(doc.id),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              _buildServiceDetail(
+                icon: Icons.calendar_today,
+                text: data['serviceDate'] ?? 'No date',
+              ),
               const SizedBox(height: 8),
-              const Divider(),
+              _buildServiceDetail(
+                icon: Icons.attach_money,
+                text: '${data['cost']?.toString() ?? '0'} LKR',
+              ),
               const SizedBox(height: 8),
-              Text(data['note']),
+              _buildServiceDetail(
+                icon: Icons.speed,
+                text: '${data['mileage']?.toString() ?? '0'} km',
+              ),
+              if (data['note'] != null && data['note'].isNotEmpty) ...[
+                const SizedBox(height: 12),
+                Divider(color: Theme.of(context).dividerColor, height: 1),
+                const SizedBox(height: 12),
+                Text(
+                  data['note'],
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+              ],
             ],
-          ],
+          ),
         ),
       ),
+    );
+  }
+
+  Widget _buildServiceDetail({required IconData icon, required String text}) {
+    return Row(
+      children: [
+        Icon(icon, size: 18, color: Theme.of(context).colorScheme.secondary),
+        const SizedBox(width: 10),
+        Text(
+          text,
+          style: Theme.of(context).textTheme.bodyMedium,
+        ),
+      ],
     );
   }
 
@@ -246,17 +293,27 @@ class _ServicesScreenState extends State<ServicesScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.error_outline, size: 50, color: Colors.red),
+                Icon(Icons.error_outline,
+                    size: 50, color: Theme.of(context).colorScheme.error),
                 const SizedBox(height: 16),
                 Text(
                   'Database Error',
                   style: Theme.of(context).textTheme.titleLarge,
                 ),
                 const SizedBox(height: 8),
-                Text(snapshot.error.toString()),
+                Text(
+                  snapshot.error.toString(),
+                  style: Theme.of(context).textTheme.bodyMedium,
+                  textAlign: TextAlign.center,
+                ),
                 const SizedBox(height: 16),
                 ElevatedButton(
                   onPressed: () => setState(() {}),
+                  style: ElevatedButton.styleFrom(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
                   child: const Text('Retry'),
                 ),
               ],
@@ -265,7 +322,11 @@ class _ServicesScreenState extends State<ServicesScreen> {
         }
 
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
+          return Center(
+            child: CircularProgressIndicator(
+              color: Theme.of(context).colorScheme.primary,
+            ),
+          );
         }
 
         List<QueryDocumentSnapshot> docs = snapshot.data!.docs;
@@ -275,7 +336,12 @@ class _ServicesScreenState extends State<ServicesScreen> {
         }
 
         if (docs.isEmpty) {
-          return const Center(child: Text('No service notes yet'));
+          return Center(
+            child: Text(
+              'No service notes yet',
+              style: Theme.of(context).textTheme.bodyLarge,
+            ),
+          );
         }
 
         return ListView.builder(
@@ -287,24 +353,127 @@ class _ServicesScreenState extends State<ServicesScreen> {
     );
   }
 
-  InputDecoration _inputDecoration(String label) {
+  InputDecoration _inputDecoration(String label, BuildContext context) {
     return InputDecoration(
       labelText: label,
-      labelStyle: const TextStyle(color: Color(0xFF4CAF50)),
+      labelStyle: TextStyle(color: Theme.of(context).colorScheme.primary),
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(8),
-        borderSide: const BorderSide(color: Color(0xFF4CAF50)),
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: Theme.of(context).dividerColor),
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(8),
-        borderSide: const BorderSide(color: Color(0xFF4CAF50), width: 2),
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(
+          color: Theme.of(context).colorScheme.primary,
+          width: 2,
+        ),
       ),
       enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(8),
-        borderSide: const BorderSide(color: Color(0xFF4CAF50)),
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: Theme.of(context).dividerColor),
       ),
       filled: true,
-      fillColor: Colors.white,
+      fillColor: Theme.of(context).cardTheme.color,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+    );
+  }
+
+  Widget _buildAddServiceForm() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Form(
+        key: _formKey,
+        child: Column(
+          children: [
+            DropdownButtonFormField<String>(
+              decoration: _inputDecoration('Service Type', context),
+              value: _selectedServiceType,
+              items: _serviceTypes
+                  .map((type) => DropdownMenuItem<String>(
+                        value: type,
+                        child: Text(type),
+                      ))
+                  .toList(),
+              onChanged: (value) =>
+                  setState(() => _selectedServiceType = value),
+              validator: (value) =>
+                  value == null ? 'Select service type' : null,
+              borderRadius: BorderRadius.circular(12),
+              dropdownColor: Theme.of(context).cardTheme.color,
+              icon: Icon(
+                Icons.arrow_drop_down,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+            ),
+            const SizedBox(height: 16),
+            if (_selectedServiceType == 'Other')
+              TextFormField(
+                controller: _otherServiceController,
+                decoration: _inputDecoration('Specify Service Type', context),
+                validator: (value) =>
+                    _selectedServiceType == 'Other' && value!.isEmpty
+                        ? 'Enter service type'
+                        : null,
+              ),
+            const SizedBox(height: 16),
+            TextFormField(
+              controller: _costController,
+              keyboardType: TextInputType.number,
+              decoration: _inputDecoration('Cost (LKR)', context),
+              validator: (value) {
+                if (value!.isEmpty) return 'Enter cost';
+                if (int.tryParse(value) == null) return 'Enter valid number';
+                return null;
+              },
+            ),
+            const SizedBox(height: 16),
+            TextFormField(
+              controller: _mileageController,
+              keyboardType: TextInputType.number,
+              decoration: _inputDecoration('Mileage (km)', context),
+              validator: (value) {
+                if (value!.isEmpty) return 'Enter mileage';
+                if (int.tryParse(value) == null) return 'Enter valid number';
+                return null;
+              },
+            ),
+            const SizedBox(height: 16),
+            TextFormField(
+              controller: _serviceDateController,
+              readOnly: true,
+              onTap: () => _selectDate(context),
+              decoration: _inputDecoration('Service Date', context),
+              validator: (value) => value!.isEmpty ? 'Select date' : null,
+            ),
+            const SizedBox(height: 16),
+            TextFormField(
+              controller: _noteController,
+              maxLines: 3,
+              decoration: _inputDecoration('Note (optional)', context),
+            ),
+            const SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: _addService,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Theme.of(context).colorScheme.primary,
+                  foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  elevation: 0,
+                ),
+                child: const Text(
+                  'SAVE SERVICE NOTE',
+                  style: TextStyle(fontSize: 16),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -313,110 +482,25 @@ class _ServicesScreenState extends State<ServicesScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Service Notes'),
-        backgroundColor: const Color(0xFF4CAF50),
         centerTitle: true,
+        elevation: 0,
+        bottom: TabBar(
+          controller: _tabController,
+          tabs: const [
+            Tab(icon: Icon(Icons.add_circle_outline)),
+            Tab(icon: Icon(Icons.list_alt)),
+          ],
+          indicatorColor: Theme.of(context).colorScheme.primary,
+          labelColor: Theme.of(context).colorScheme.primary,
+          unselectedLabelColor:
+              Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+        ),
       ),
-      body: Column(
+      body: TabBarView(
+        controller: _tabController,
         children: [
-          // Form Section
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  children: [
-                    DropdownButtonFormField<String>(
-                      decoration: _inputDecoration('Service Type'),
-                      value: _selectedServiceType,
-                      items: _serviceTypes
-                          .map((type) => DropdownMenuItem<String>(
-                                value: type,
-                                child: Text(type),
-                              ))
-                          .toList(),
-                      onChanged: (value) =>
-                          setState(() => _selectedServiceType = value),
-                      validator: (value) =>
-                          value == null ? 'Select service type' : null,
-                    ),
-                    const SizedBox(height: 16),
-                    if (_selectedServiceType == 'Other')
-                      TextFormField(
-                        controller: _otherServiceController,
-                        decoration: _inputDecoration('Specify Service Type'),
-                        validator: (value) =>
-                            _selectedServiceType == 'Other' && value!.isEmpty
-                                ? 'Enter service type'
-                                : null,
-                      ),
-                    const SizedBox(height: 16),
-                    TextFormField(
-                      controller: _costController,
-                      keyboardType: TextInputType.number,
-                      decoration: _inputDecoration('Cost (LKR)'),
-                      validator: (value) {
-                        if (value!.isEmpty) return 'Enter cost';
-                        if (int.tryParse(value) == null)
-                          return 'Enter valid number';
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 16),
-                    TextFormField(
-                      controller: _mileageController,
-                      keyboardType: TextInputType.number,
-                      decoration: _inputDecoration('Mileage (km)'),
-                      validator: (value) {
-                        if (value!.isEmpty) return 'Enter mileage';
-                        if (int.tryParse(value) == null)
-                          return 'Enter valid number';
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 16),
-                    TextFormField(
-                      controller: _serviceDateController,
-                      readOnly: true,
-                      onTap: () => _selectDate(context),
-                      decoration: _inputDecoration('Service Date'),
-                      validator: (value) =>
-                          value!.isEmpty ? 'Select date' : null,
-                    ),
-                    const SizedBox(height: 16),
-                    TextFormField(
-                      controller: _noteController,
-                      maxLines: 3,
-                      decoration: _inputDecoration('Note (optional)'),
-                    ),
-                    const SizedBox(height: 24),
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: _addService,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF4CAF50),
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                        ),
-                        child: const Text(
-                          'SAVE SERVICE NOTE',
-                          style: TextStyle(fontSize: 16, color: Colors.white),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-          const Divider(height: 1, thickness: 1),
-          // List Section
-          Expanded(
-            child: _buildServiceList(),
-          ),
+          _buildAddServiceForm(),
+          _buildServiceList(),
         ],
       ),
     );

@@ -1,6 +1,4 @@
-// tips.dart
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 
 class CarTipsPage extends StatefulWidget {
   const CarTipsPage({super.key});
@@ -10,180 +8,134 @@ class CarTipsPage extends StatefulWidget {
 }
 
 class _CarTipsPageState extends State<CarTipsPage> {
-  bool _isDarkMode = false;
   String _searchQuery = '';
-  int _selectedCategory = 0; // 0=All, 1=Critical, 2=Warning, 3=Info
+  int _selectedCategory = 0;
   final List<int> _favoriteIndicators = [];
 
   final List<IndicatorItem> _allIndicators = [
     // Critical (Red) Indicators
     IndicatorItem(
-      icon: 'assets/icons/temperature.svg',
-      name: 'Engine Temperature',
+      imagePath: 'assets/temp.png',
+      name: 'Engine Temp',
       description: 'Engine overheating warning',
       severity: Severity.critical,
-      issue:
-          'Coolant leak, faulty thermostat, broken water pump, or cooling fan failure',
-      solution: '1. Pull over immediately and turn off engine\n'
-          '2. Wait 30 minutes before checking coolant level\n'
-          '3. If low, refill with 50/50 coolant-water mix\n'
-          '4. Never open radiator when hot\n'
-          '5. If light stays on, call for tow service',
-      immediateAction: 'STOP DRIVING - Continuing can cause engine seizure',
-      videoUrl: 'https://example.com/engine_overheating',
+      issue: 'Coolant leak, faulty thermostat',
+      solution: '1. Pull over immediately\n2. Check coolant level',
+      immediateAction: 'STOP DRIVING',
+      videoUrl: 'https://youtu.be/3o-cHdz1uk8?si=fcxIZLOIcX6qm5IL',
     ),
     IndicatorItem(
-      icon: 'assets/icons/oil.svg',
+      imagePath: 'assets/oil.png',
       name: 'Oil Pressure',
       description: 'Low oil pressure detected',
       severity: Severity.critical,
-      issue: 'Oil leak, clogged filter, pump failure, or low oil level',
-      solution: '1. Stop driving immediately\n'
-          '2. Check oil level with dipstick\n'
-          '3. Top up if low with recommended oil\n'
-          '4. If level is normal, suspect pump or sensor issue\n'
-          '5. Do not restart engine if light stays on',
-      immediateAction: 'Engine damage likely if driven with low oil pressure',
+      issue: 'Oil leak, clogged filter',
+      solution: '1. Stop driving\n2. Check oil level',
+      immediateAction: 'Engine damage likely',
       videoUrl: 'https://example.com/oil_pressure',
     ),
     IndicatorItem(
-      icon: 'assets/icons/brake.svg',
+      imagePath: 'assets/brake.png',
       name: 'Brake System',
       description: 'Brake system malfunction',
       severity: Severity.critical,
-      issue: 'Low brake fluid, worn pads, hydraulic failure, or ABS problem',
-      solution: '1. Test brakes at low speed in safe area\n'
-          '2. Check brake fluid level in reservoir\n'
-          '3. Top up with DOT-approved fluid if low\n'
-          '4. If pedal feels spongy, have system bled\n'
-          '5. Avoid sudden stops - braking distance may increase',
-      immediateAction: 'Brake failure possible - proceed with extreme caution',
+      issue: 'Low brake fluid, worn pads',
+      solution: '1. Test brakes carefully\n2. Check fluid',
+      immediateAction: 'Brake failure possible',
       videoUrl: 'https://example.com/brake_warning',
     ),
     IndicatorItem(
-      icon: 'assets/icons/battery.svg',
-      name: 'Charging System',
+      imagePath: 'assets/battery.png',
+      name: 'Charging',
       description: 'Battery not charging',
       severity: Severity.critical,
-      issue: 'Alternator failure, bad battery, loose belts, or wiring issues',
-      solution: '1. Turn off non-essential electronics\n'
-          '2. Check battery terminals for corrosion\n'
-          '3. Try jump-starting if battery is dead\n'
-          '4. Drive directly to repair shop\n'
-          '5. Vehicle may stall when battery drains completely',
-      immediateAction: 'Limited driving time remaining - typically 10-20 miles',
+      issue: 'Alternator failure',
+      solution: '1. Turn off electronics\n2. Check terminals',
+      immediateAction: 'Limited driving time',
       videoUrl: 'https://example.com/charging_system',
     ),
 
     // Warning (Yellow/Orange) Indicators
     IndicatorItem(
-      icon: 'assets/icons/engine.svg',
+      imagePath: 'assets/engine.png',
       name: 'Check Engine',
-      description: 'Engine management issue',
+      description: 'Engine issue detected',
       severity: Severity.warning,
-      issue: '100+ possible causes from loose gas cap to serious misfires',
-      solution: '1. First check if gas cap is loose (common fix)\n'
-          '2. If light is flashing, reduce load and get immediate service\n'
-          '3. For solid light, have codes read at auto parts store\n'
-          '4. Note any symptoms (rough idle, loss of power)\n'
-          '5. Schedule diagnostic service',
-      immediateAction:
-          'Flashing light = stop driving. Solid light = service soon',
+      issue: 'Multiple possible causes',
+      solution: '1. Check gas cap\n2. Get diagnostic',
+      immediateAction: 'Service soon',
       videoUrl: 'https://example.com/check_engine',
     ),
     IndicatorItem(
-      icon: 'assets/icons/abs.svg',
+      imagePath: 'assets/abs.png',
       name: 'ABS Warning',
-      description: 'Anti-lock brake system fault',
+      description: 'ABS system fault',
       severity: Severity.warning,
-      issue:
-          'Wheel speed sensor failure, low battery voltage, or module problem',
-      solution: '1. Conventional brakes still work normally\n'
-          '2. Avoid panic stops that would trigger ABS\n'
-          '3. Have system scanned for specific fault codes\n'
-          '4. Common causes include dirty wheel sensors\n'
-          '5. Repair before winter driving conditions',
-      immediateAction: 'Brakes work but without anti-lock protection',
+      issue: 'Sensor or module problem',
+      solution: '1. Brakes still work\n2. Get scanned',
+      immediateAction: 'No anti-lock protection',
       videoUrl: 'https://example.com/abs_warning',
     ),
     IndicatorItem(
-      icon: 'assets/icons/tire.svg',
+      imagePath: 'assets/tire-pressure.png',
       name: 'Tire Pressure',
-      description: 'Low tire pressure detected',
+      description: 'Low tire pressure',
       severity: Severity.warning,
-      issue: 'Underinflation, puncture, temperature change, or sensor fault',
-      solution: '1. Check all tires with quality gauge\n'
-          '2. Inflate to PSI listed on driver door jamb sticker\n'
-          '3. Inspect for nails/slow leaks\n'
-          '4. Reset system after inflation (check manual)\n'
-          '5. If light returns, may need sensor battery replacement',
-      immediateAction: 'Improper inflation reduces safety and fuel economy',
+      issue: 'Underinflation or puncture',
+      solution: '1. Check all tires\n2. Inflate properly',
+      immediateAction: 'Reduced safety',
       videoUrl: 'https://example.com/tire_pressure',
     ),
     IndicatorItem(
-      icon: 'assets/icons/traction.svg',
+      imagePath: 'assets/traction-control.png',
       name: 'Traction Control',
-      description: 'Stability system disabled',
+      description: 'System disabled',
       severity: Severity.warning,
-      issue: 'System malfunction, button pressed, or wheel sensor issue',
-      solution: '1. Check if system was accidentally turned off\n'
-          '2. Try restarting vehicle\n'
-          '3. If light stays on, avoid slippery conditions\n'
-          '4. Have system scanned for codes\n'
-          '5. Common causes include faulty yaw rate sensor',
-      immediateAction: 'Vehicle less stable in emergency maneuvers',
+      issue: 'Button pressed or sensor issue',
+      solution: '1. Check if turned off\n2. Restart vehicle',
+      immediateAction: 'Less stability',
       videoUrl: 'https://example.com/traction_control',
     ),
 
     // Informational (Blue/Green) Indicators
     IndicatorItem(
-      icon: 'assets/icons/highbeam.svg',
+      imagePath: 'assets/high-beam.png',
       name: 'High Beams',
-      description: 'High beam headlights active',
+      description: 'High beams active',
       severity: Severity.info,
-      issue: 'Normal operation when high beams engaged',
-      solution:
-          'Toggle stalk forward/backward to switch between high/low beams\n'
-          'Automatic systems may require dashboard control adjustment',
-      immediateAction: 'Remember to dim for oncoming traffic',
+      issue: 'Normal operation',
+      solution: 'Toggle stalk to switch',
+      immediateAction: 'Dim for traffic',
       videoUrl: 'https://example.com/high_beams',
     ),
     IndicatorItem(
-      icon: 'assets/icons/cruise.svg',
+      imagePath: 'assets/cruise.png',
       name: 'Cruise Control',
-      description: 'Speed control system active',
+      description: 'Speed control active',
       severity: Severity.info,
-      issue: 'Normal operation or possible brake switch fault',
-      solution: '1. Set/Resume: Press SET or RES buttons\n'
-          '2. Cancel: Tap brake or cancel button\n'
-          '3. If system won\'t engage, check brake lights\n'
-          '4. Adaptive systems may require radar calibration',
-      immediateAction: 'System maintains speed but doesn\'t detect obstacles',
+      issue: 'Normal operation',
+      solution: 'Press SET/RES buttons',
+      immediateAction: 'No obstacle detection',
       videoUrl: 'https://example.com/cruise_control',
     ),
     IndicatorItem(
-      icon: 'assets/icons/foglight.svg',
+      imagePath: 'assets/fog-light.png',
       name: 'Fog Lights',
-      description: 'Fog lights activated',
+      description: 'Fog lights on',
       severity: Severity.info,
-      issue: 'Normal operation when fog lights turned on',
-      solution:
-          'Usually controlled by separate switch or headlight dial rotation\n'
-          'Check owner\'s manual for specific activation method',
-      immediateAction: 'Use only in low visibility conditions',
+      issue: 'Normal operation',
+      solution: 'Controlled by switch',
+      immediateAction: 'Use in low visibility',
       videoUrl: 'https://example.com/fog_lights',
     ),
     IndicatorItem(
-      icon: 'assets/icons/maintenance.svg',
-      name: 'Maintenance Required',
-      description: 'Scheduled service reminder',
+      imagePath: 'assets/maintenance.png',
+      name: 'Maintenance',
+      description: 'Service reminder',
       severity: Severity.info,
-      issue: 'Mileage-based service interval reached',
-      solution: '1. Reset light after completing maintenance\n'
-          '2. Typical services: oil change, tire rotation\n'
-          '3. Check maintenance schedule in manual\n'
-          '4. Some systems track multiple service intervals',
-      immediateAction: 'Schedule service at your earliest convenience',
+      issue: 'Scheduled service',
+      solution: 'Complete maintenance',
+      immediateAction: 'Schedule service',
       videoUrl: 'https://example.com/maintenance_light',
     ),
   ];
@@ -191,7 +143,6 @@ class _CarTipsPageState extends State<CarTipsPage> {
   List<IndicatorItem> get _filteredIndicators {
     List<IndicatorItem> filtered = _allIndicators;
 
-    // Apply category filter
     if (_selectedCategory == 1) {
       filtered =
           filtered.where((i) => i.severity == Severity.critical).toList();
@@ -201,20 +152,14 @@ class _CarTipsPageState extends State<CarTipsPage> {
       filtered = filtered.where((i) => i.severity == Severity.info).toList();
     }
 
-    // Apply search filter
     if (_searchQuery.isNotEmpty) {
       filtered = filtered.where((indicator) {
         return indicator.name
-                .toLowerCase()
-                .contains(_searchQuery.toLowerCase()) ||
-            indicator.description
-                .toLowerCase()
-                .contains(_searchQuery.toLowerCase()) ||
-            indicator.issue.toLowerCase().contains(_searchQuery.toLowerCase());
+            .toLowerCase()
+            .contains(_searchQuery.toLowerCase());
       }).toList();
     }
 
-    // Apply favorites filter if in favorites mode
     if (_selectedCategory == 4) {
       filtered = filtered
           .where((i) => _favoriteIndicators.contains(_allIndicators.indexOf(i)))
@@ -236,147 +181,132 @@ class _CarTipsPageState extends State<CarTipsPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Theme(
-      data: _isDarkMode
-          ? ThemeData.dark().copyWith(
-              cardColor: Colors.grey[900],
-              dividerColor: Colors.grey[800],
-              chipTheme: ChipThemeData(
-                backgroundColor: Colors.grey[800],
-                selectedColor: Colors.red.withOpacity(0.2),
-                labelStyle: const TextStyle(color: Colors.white),
-              ),
-            )
-          : ThemeData.light().copyWith(
-              cardColor: Colors.white,
-              dividerColor: Colors.grey[200],
-              chipTheme: const ChipThemeData(
-                backgroundColor: Color(0xFFEEEEEE),
-                selectedColor: Color(0xFFFFCDD2),
-                labelStyle: TextStyle(color: Colors.black),
-              ),
-            ),
-      child: Scaffold(
-        appBar: AppBar(
-          title: const Text('Car Care Tips'),
-          actions: [
-            IconButton(
-              icon: Icon(_isDarkMode ? Icons.light_mode : Icons.dark_mode),
-              onPressed: () => setState(() => _isDarkMode = !_isDarkMode),
-              tooltip: 'Toggle dark mode',
-            ),
-          ],
-        ),
-        body: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-              child: Column(
-                children: [
-                  TextField(
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Car Care Tips'),
+        centerTitle: true,
+        elevation: 0,
+      ),
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              children: [
+                // Search Bar
+                Container(
+                  decoration: BoxDecoration(
+                    color: colorScheme.surface,
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 6,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: TextField(
                     decoration: InputDecoration(
                       hintText: 'Search tips...',
                       prefixIcon: const Icon(Icons.search),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
+                      border: InputBorder.none,
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 14,
                       ),
-                      filled: true,
-                      fillColor:
-                          _isDarkMode ? Colors.grey[800] : Colors.grey[200],
                     ),
                     onChanged: (value) => setState(() => _searchQuery = value),
                   ),
-                  const SizedBox(height: 12),
-                  SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
+                ),
+                const SizedBox(height: 16),
+                // Category Chips
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      _buildCategoryChip(0, 'All', theme),
+                      _buildCategoryChip(1, 'Critical', theme, Colors.red),
+                      _buildCategoryChip(2, 'Warning', theme, Colors.orange),
+                      _buildCategoryChip(3, 'Info', theme, Colors.blue),
+                      _buildCategoryChip(4, 'Favorites', theme, Colors.pink),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Expanded(
+            child: _filteredIndicators.isEmpty
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        _buildCategoryChip(0, 'All'),
-                        _buildCategoryChip(1, 'Critical', Colors.red),
-                        _buildCategoryChip(2, 'Warning', Colors.orange),
-                        _buildCategoryChip(3, 'Info', Colors.blue),
-                        _buildCategoryChip(4, 'Favorites', Colors.pink),
+                        Icon(
+                          Icons.search_off,
+                          size: 48,
+                          color: theme.disabledColor,
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'No matching tips found',
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            color: theme.disabledColor,
+                          ),
+                        ),
                       ],
                     ),
-                  ),
-                ],
-              ),
-            ),
-            Expanded(
-              child: _filteredIndicators.isEmpty
-                  ? Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.search_off,
-                            size: 48,
-                            color: _isDarkMode
-                                ? Colors.grey[600]
-                                : Colors.grey[400],
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            'No matching tips found',
-                            style: TextStyle(
-                              fontSize: 18,
-                              color: _isDarkMode
-                                  ? Colors.grey[400]
-                                  : Colors.grey[600],
-                            ),
-                          ),
-                          if (_selectedCategory == 4)
-                            TextButton(
-                              child: const Text('Browse all tips'),
-                              onPressed: () =>
-                                  setState(() => _selectedCategory = 0),
-                            ),
-                        ],
-                      ),
-                    )
-                  : ListView.builder(
-                      padding: const EdgeInsets.only(bottom: 16),
-                      itemCount: _filteredIndicators.length,
-                      itemBuilder: (context, index) {
-                        final indicator = _filteredIndicators[index];
-                        final originalIndex = _allIndicators.indexOf(indicator);
-                        return _TipCard(
-                          indicator: indicator,
-                          isDarkMode: _isDarkMode,
-                          isFavorite:
-                              _favoriteIndicators.contains(originalIndex),
-                          onFavoriteToggle: () =>
-                              _toggleFavorite(originalIndex),
-                        );
-                      },
+                  )
+                : GridView.builder(
+                    padding: const EdgeInsets.all(16),
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2,
+                      crossAxisSpacing: 16,
+                      mainAxisSpacing: 16,
+                      childAspectRatio: 0.9,
                     ),
-            ),
-          ],
-        ),
+                    itemCount: _filteredIndicators.length,
+                    itemBuilder: (context, index) {
+                      final indicator = _filteredIndicators[index];
+                      final originalIndex = _allIndicators.indexOf(indicator);
+                      return _TipBox(
+                        indicator: indicator,
+                        isFavorite: _favoriteIndicators.contains(originalIndex),
+                        onFavoriteToggle: () => _toggleFavorite(originalIndex),
+                      );
+                    },
+                  ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildCategoryChip(int index, String label, [Color? color]) {
+  Widget _buildCategoryChip(int index, String label, ThemeData theme,
+      [Color? color]) {
     final isSelected = _selectedCategory == index;
     return Padding(
       padding: const EdgeInsets.only(right: 8),
-      child: ChoiceChip(
+      child: FilterChip(
         label: Text(label),
         selected: isSelected,
         onSelected: (_) => setState(() => _selectedCategory = index),
-        labelStyle: TextStyle(
-          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+        backgroundColor: theme.cardColor,
+        selectedColor: color?.withOpacity(0.2),
+        labelStyle: theme.textTheme.labelLarge?.copyWith(
           color: isSelected
-              ? color ?? (_isDarkMode ? Colors.white : Colors.black)
-              : _isDarkMode
-                  ? Colors.grey[300]
-                  : Colors.grey[700],
+              ? color ?? theme.colorScheme.onSurface
+              : theme.colorScheme.onSurface.withOpacity(0.6),
         ),
-        shape: StadiumBorder(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
           side: BorderSide(
             color:
-                isSelected ? color ?? Colors.transparent : Colors.transparent,
+                isSelected ? color ?? Colors.transparent : theme.dividerColor,
           ),
         ),
       ),
@@ -384,163 +314,207 @@ class _CarTipsPageState extends State<CarTipsPage> {
   }
 }
 
-class _TipCard extends StatelessWidget {
+class _TipBox extends StatelessWidget {
   final IndicatorItem indicator;
-  final bool isDarkMode;
   final bool isFavorite;
   final VoidCallback onFavoriteToggle;
 
-  const _TipCard({
+  const _TipBox({
     required this.indicator,
-    required this.isDarkMode,
     required this.isFavorite,
     required this.onFavoriteToggle,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: ExpansionTile(
-        leading: Container(
-          width: 40,
-          height: 40,
-          decoration: BoxDecoration(
-            color: indicator.severity.color.withOpacity(0.2),
-            shape: BoxShape.circle,
-          ),
-          child: Center(
-            child: SvgPicture.asset(
-              indicator.icon,
-              width: 24,
-              height: 24,
-              color: indicator.severity.color,
-            ),
-          ),
-        ),
-        title: Text(
-          indicator.name,
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 16,
-            color: isDarkMode ? Colors.white : Colors.black,
-          ),
-        ),
-        subtitle: Text(
-          indicator.description,
-          style: TextStyle(
-            color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
-          ),
-        ),
-        trailing: IconButton(
-          icon: Icon(
-            isFavorite ? Icons.favorite : Icons.favorite_border,
-            color: isFavorite
-                ? Colors.pink
-                : (isDarkMode ? Colors.grey[500] : Colors.grey[400]),
-          ),
-          onPressed: onFavoriteToggle,
-        ),
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildInfoSection('Possible Issue', indicator.issue),
-                const SizedBox(height: 16),
-                _buildInfoSection(
-                    'Immediate Action', indicator.immediateAction),
-                const SizedBox(height: 16),
-                _buildInfoSection('Solution', indicator.solution),
-                if (indicator.severity == Severity.critical) ...[
-                  const SizedBox(height: 16),
-                  _buildCriticalWarning(),
-                ],
-                if (indicator.videoUrl.isNotEmpty) ...[
-                  const SizedBox(height: 16),
-                  _buildVideoButton(context),
-                ],
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
 
-  Widget _buildInfoSection(String title, String content) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 15,
-            color: isDarkMode ? Colors.grey[300] : Colors.grey[800],
-          ),
+    return GestureDetector(
+      onTap: () {
+        _showDetailsDialog(context);
+      },
+      child: Container(
+        decoration: BoxDecoration(
+          color: colorScheme.surface,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 6,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
-        const SizedBox(height: 6),
-        Text(
-          content.replaceAll('\n', '\n• '),
-          style: TextStyle(
-            fontSize: 14,
-            color: isDarkMode ? Colors.grey[400] : Colors.grey[700],
-            height: 1.4,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildCriticalWarning() {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.red.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.red.withOpacity(0.3)),
-      ),
-      child: Row(
-        children: [
-          Icon(Icons.warning_amber_rounded, color: Colors.red[400]),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              'Critical Warning: Requires immediate attention to prevent vehicle damage or unsafe driving conditions',
-              style: TextStyle(
-                color: Colors.red[400],
-                fontWeight: FontWeight.w500,
+        child: Stack(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: indicator.severity.color.withOpacity(0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Center(
+                      child: Image.asset(
+                        indicator.imagePath,
+                        width: 24,
+                        height: 24,
+                        color: indicator.severity.color,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Icon(
+                            Icons.warning,
+                            color: indicator.severity.color,
+                            size: 24,
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    indicator.name,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    indicator.description,
+                    style: theme.textTheme.bodySmall,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
               ),
             ),
-          ),
-        ],
+            Positioned(
+              top: 8,
+              right: 8,
+              child: IconButton(
+                icon: Icon(
+                  isFavorite ? Icons.favorite : Icons.favorite_border,
+                  color: isFavorite ? Colors.pink : theme.disabledColor,
+                  size: 20,
+                ),
+                onPressed: onFavoriteToggle,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildVideoButton(BuildContext context) {
-    return OutlinedButton.icon(
-      icon: const Icon(Icons.play_circle_outline),
-      label: const Text('Watch Video Guide'),
-      style: OutlinedButton.styleFrom(
-        foregroundColor: Colors.blue,
-        side: const BorderSide(color: Colors.blue),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      ),
-      onPressed: () {
-        // TODO: Implement video playback
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Opening video: ${indicator.videoUrl}'),
+  void _showDetailsDialog(BuildContext context) {
+    final theme = Theme.of(context);
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(indicator.name),
+        content: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      color: indicator.severity.color.withOpacity(0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Center(
+                      child: Image.asset(
+                        indicator.imagePath,
+                        width: 16,
+                        height: 16,
+                        color: indicator.severity.color,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Icon(
+                            Icons.warning,
+                            color: indicator.severity.color,
+                            size: 16,
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    indicator.description,
+                    style: theme.textTheme.bodyMedium,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Possible Issue',
+                style: theme.textTheme.titleSmall?.copyWith(
+                  color: theme.colorScheme.primary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(indicator.issue),
+              const SizedBox(height: 16),
+              Text(
+                'Immediate Action',
+                style: theme.textTheme.titleSmall?.copyWith(
+                  color: theme.colorScheme.primary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(indicator.immediateAction),
+              const SizedBox(height: 16),
+              Text(
+                'Solution',
+                style: theme.textTheme.titleSmall?.copyWith(
+                  color: theme.colorScheme.primary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(indicator.solution),
+              if (indicator.videoUrl.isNotEmpty) ...[
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    icon: const Icon(Icons.play_circle_outline, size: 16),
+                    label: const Text('Watch Video Guide'),
+                    onPressed: () {
+                      Navigator.pop(context);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Opening: ${indicator.videoUrl}'),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ],
           ),
-        );
-      },
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -563,7 +537,7 @@ enum Severity {
 }
 
 class IndicatorItem {
-  final String icon;
+  final String imagePath;
   final String name;
   final String description;
   final Severity severity;
@@ -573,7 +547,7 @@ class IndicatorItem {
   final String videoUrl;
 
   IndicatorItem({
-    required this.icon,
+    required this.imagePath,
     required this.name,
     required this.description,
     required this.severity,

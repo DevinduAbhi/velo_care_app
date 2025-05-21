@@ -48,12 +48,12 @@ dependencies:
   uuid: ^4.5.1 
   equatable: ^2.0.5
   
-  # New dependencies for Mechanic Finder
+  # Mechanic Finder
   flutter_map: ^5.0.0
   latlong2: ^0.9.0
   geolocator: ^11.0.0
-  logger: ^2.0.2  # For better logging (optional)
-  
+  logger: ^2.0.2
+
 
 dev_dependencies:
   flutter_test:
@@ -68,7 +68,7 @@ flutter:
     - assets/car.jpg
     - assets/logo.png
     - assets/document.png
-    - assets/maintenance.png
+    - assets/maintenan.png
     - assets/mechanic.png
     - assets/reminders.png
     - assets/services.png
@@ -77,3 +77,17 @@ flutter:
     - assets/help_support.png
     - assets/loginbac.jpg
     - assets/obd.png
+    - assets/insurance_icon.png
+    
+    - assets/brake.png
+    - assets/battery.png
+    - assets/engine.png
+    - assets/temp.png
+    - assets/fog-light.png
+    - assets/high-beam.png
+    - assets/oil.png
+    - assets/tire-pressure.png
+    - assets/traction-control.png
+    - assets/abs.png
+    - assets/maintenance.png
+    - assets/cruise.png

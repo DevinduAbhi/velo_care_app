@@ -6,7 +6,7 @@ import 'vehicles/add_vehicle_screen.dart';
 import 'dashboard.dart';
 import 'settings_screen.dart';
 import 'themes/theme_notifier.dart';
-import 'stats.dart'; // Import the stats screen
+import 'stats.dart';
 
 class HomePage extends StatefulWidget {
   final ThemeNotifier themeNotifier;

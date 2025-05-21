@@ -17,12 +17,28 @@ class _StatsScreenState extends State<StatsScreen>
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   String? _userId;
+  bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
-    _userId = _auth.currentUser?.uid;
+    _tabController = TabController(length: 2, vsync: this);
+    _getCurrentUser();
+  }
+
+  Future<void> _getCurrentUser() async {
+    try {
+      final user = _auth.currentUser;
+      setState(() {
+        _userId = user?.uid;
+        _isLoading = false;
+      });
+    } catch (e) {
+      print("Error getting current user: $e");
+      setState(() {
+        _isLoading = false;
+      });
+    }
   }
 
   @override
@@ -31,22 +47,37 @@ class _StatsScreenState extends State<StatsScreen>
     super.dispose();
   }
 
-  // Helper function to check bold text setting
   bool _isBoldText(BuildContext context) {
     return MediaQuery.of(context).boldText ?? false;
   }
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (_userId == null) {
+      return Scaffold(
+        appBar: AppBar(
+          title: const Text('Fuel Analytics'),
+        ),
+        body: const Center(
+          child: Text('Please sign in to view your fuel stats'),
+        ),
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Vehicle Analytics'),
+        title: const Text('Fuel Analytics'),
         bottom: TabBar(
           controller: _tabController,
           tabs: const [
-            Tab(icon: Icon(Icons.local_gas_station)),
-            Tab(icon: Icon(Icons.build)),
-            Tab(icon: Icon(Icons.eco)),
+            Tab(icon: Icon(Icons.local_gas_station), text: 'Fuel'),
+            Tab(icon: Icon(Icons.eco), text: 'Tips'),
           ],
         ),
       ),
@@ -54,7 +85,6 @@ class _StatsScreenState extends State<StatsScreen>
         controller: _tabController,
         children: [
           _buildFuelTab(),
-          _buildServicesTab(),
           _buildTipsTab(),
         ],
       ),
@@ -94,10 +124,31 @@ class _StatsScreenState extends State<StatsScreen>
       stream: _firestore
           .collection('fuel_entries')
           .where('userId', isEqualTo: _userId)
-          .where('date', isGreaterThan: Timestamp.fromDate(firstDayOfMonth))
+          .where('date',
+              isGreaterThanOrEqualTo: Timestamp.fromDate(firstDayOfMonth))
+          .orderBy('date', descending: true)
           .snapshots(),
       builder: (context, snapshot) {
-        if (!snapshot.hasData) return _buildLoading();
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return _buildLoading();
+        }
+
+        if (snapshot.hasError) {
+          return _buildErrorWidget(snapshot.error.toString());
+        }
+
+        if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+          return Card(
+            elevation: 2,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: const Padding(
+              padding: EdgeInsets.all(16),
+              child: Text('No fuel entries found for this month'),
+            ),
+          );
+        }
 
         double totalLiters = 0;
         double totalCost = 0;
@@ -105,9 +156,9 @@ class _StatsScreenState extends State<StatsScreen>
 
         for (var doc in snapshot.data!.docs) {
           final data = doc.data() as Map<String, dynamic>;
-          totalLiters += (data['liters'] as num).toDouble();
-          totalCost += (data['cost'] as num).toDouble();
-          totalDistance += (data['odometer'] as num).toDouble();
+          totalLiters += (data['liters'] as num?)?.toDouble() ?? 0;
+          totalCost += (data['cost'] as num?)?.toDouble() ?? 0;
+          totalDistance += (data['odometer'] as num?)?.toDouble() ?? 0;
         }
 
         final avgCostPerLiter = totalLiters > 0 ? totalCost / totalLiters : 0;
@@ -160,29 +211,6 @@ class _StatsScreenState extends State<StatsScreen>
     );
   }
 
-  Widget _buildMetricTile({
-    required IconData icon,
-    required String label,
-    required String value,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Row(
-        children: [
-          Icon(icon, size: 24, color: Theme.of(context).primaryColor),
-          const SizedBox(width: 16),
-          Expanded(child: Text(label)),
-          Text(
-            value,
-            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildFuelConsumptionChart() {
     return StreamBuilder<QuerySnapshot>(
       stream: _firestore
@@ -192,43 +220,69 @@ class _StatsScreenState extends State<StatsScreen>
           .limit(10)
           .snapshots(),
       builder: (context, snapshot) {
-        if (!snapshot.hasData) return _buildLoading();
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return _buildLoading();
+        }
+
+        if (snapshot.hasError) {
+          return _buildErrorWidget(snapshot.error.toString());
+        }
+
+        if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+          return Card(
+            elevation: 2,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: const Padding(
+              padding: EdgeInsets.all(16),
+              child: Text('No fuel entries available to display chart'),
+            ),
+          );
+        }
 
         final entries = snapshot.data!.docs.map((doc) {
           final data = doc.data() as Map<String, dynamic>;
           return {
             'date': (data['date'] as Timestamp).toDate(),
-            'liters': data['liters'],
+            'liters': (data['liters'] as num?)?.toDouble() ?? 0,
           };
         }).toList();
+
+        entries.sort(
+            (a, b) => (a['date'] as DateTime).compareTo(b['date'] as DateTime));
 
         return SizedBox(
           height: 300,
           child: BarChart(
             BarChartData(
-              barGroups: entries.map((entry) {
+              barGroups: List.generate(entries.length, (index) {
                 return BarChartGroupData(
-                  x: entries.indexOf(entry),
+                  x: index,
                   barRods: [
                     BarChartRodData(
-                      toY: (entry['liters'] as num).toDouble(),
+                      toY: entries[index]['liters'] as double,
                       color: Theme.of(context).primaryColor,
                       width: 16,
                       borderRadius: BorderRadius.circular(4),
                     ),
                   ],
                 );
-              }).toList(),
+              }),
               titlesData: FlTitlesData(
                 bottomTitles: AxisTitles(
                   sideTitles: SideTitles(
                     showTitles: true,
                     getTitlesWidget: (value, meta) {
+                      if (value.toInt() >= entries.length ||
+                          value.toInt() < 0) {
+                        return const SizedBox.shrink();
+                      }
                       return Padding(
                         padding: const EdgeInsets.only(top: 8),
                         child: Text(
-                          DateFormat('MMM dd')
-                              .format(entries[value.toInt()]['date']),
+                          DateFormat('MMM dd').format(
+                              entries[value.toInt()]['date'] as DateTime),
                           style: TextStyle(
                             fontSize: 10,
                             fontWeight: _isBoldText(context)
@@ -283,7 +337,22 @@ class _StatsScreenState extends State<StatsScreen>
               .limit(5)
               .snapshots(),
           builder: (context, snapshot) {
-            if (!snapshot.hasData) return _buildLoading();
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return _buildLoading();
+            }
+
+            if (snapshot.hasError) {
+              return _buildErrorWidget(snapshot.error.toString());
+            }
+
+            if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+              return const Padding(
+                padding: EdgeInsets.symmetric(vertical: 20),
+                child: Center(
+                  child: Text('No fuel entries found. Add your first entry!'),
+                ),
+              );
+            }
 
             return ListView.builder(
               shrinkWrap: true,
@@ -292,157 +361,25 @@ class _StatsScreenState extends State<StatsScreen>
               itemBuilder: (context, index) {
                 final doc = snapshot.data!.docs[index];
                 final data = doc.data() as Map<String, dynamic>;
+
+                final liters = (data['liters'] as num?)?.toDouble() ?? 0;
+                final cost = (data['cost'] as num?)?.toDouble() ?? 0;
+                final odometer = (data['odometer'] as num?)?.toString() ?? '-';
+                final date = data['date'] is Timestamp
+                    ? (data['date'] as Timestamp).toDate()
+                    : DateTime.now();
 
                 return ListTile(
                   leading: const Icon(Icons.local_gas_station),
                   title: Text(
-                    '${data['liters']} L - ${NumberFormat.currency(symbol: 'LKR ').format(data['cost'])}',
+                    '${liters.toStringAsFixed(1)} L - ${NumberFormat.currency(symbol: 'LKR ').format(cost)}',
                   ),
                   subtitle: Text(
-                    DateFormat.yMMMd().add_jm().format(
-                          (data['date'] as Timestamp).toDate(),
-                        ),
+                    DateFormat.yMMMd().add_jm().format(date),
                   ),
                   trailing: Text(
-                    '${data['odometer']} km',
+                    '$odometer km',
                     style: Theme.of(context).textTheme.bodySmall,
-                  ),
-                );
-              },
-            );
-          },
-        ),
-      ],
-    );
-  }
-
-  Widget _buildServicesTab() {
-    return RefreshIndicator(
-      onRefresh: () async => setState(() {}),
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            _buildServiceCostSummary(),
-            const SizedBox(height: 24),
-            _buildRecentServices(),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildServiceCostSummary() {
-    final now = DateTime.now();
-    final firstDayOfMonth = DateTime(now.year, now.month, 1);
-
-    return StreamBuilder<QuerySnapshot>(
-      stream: _firestore
-          .collection('services')
-          .where('userId', isEqualTo: _userId)
-          .where('serviceDate',
-              isGreaterThan: DateFormat('yyyy-MM-dd').format(firstDayOfMonth))
-          .snapshots(),
-      builder: (context, snapshot) {
-        if (!snapshot.hasData) return _buildLoading();
-
-        double totalCost = 0;
-        final serviceCounts = <String, int>{};
-
-        for (var doc in snapshot.data!.docs) {
-          final data = doc.data() as Map<String, dynamic>;
-          totalCost += (data['cost'] as num).toDouble();
-          final serviceType = data['serviceType'] as String;
-          serviceCounts[serviceType] = (serviceCounts[serviceType] ?? 0) + 1;
-        }
-
-        final mostCommonService = serviceCounts.isNotEmpty
-            ? serviceCounts.entries
-                .reduce((a, b) => a.value > b.value ? a : b)
-                .key
-            : 'None';
-
-        return Card(
-          elevation: 2,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Monthly Service Summary',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                ),
-                const SizedBox(height: 16),
-                _buildMetricTile(
-                  icon: Icons.attach_money,
-                  label: 'Total Cost',
-                  value:
-                      '${NumberFormat.currency(symbol: 'LKR ').format(totalCost)}',
-                ),
-                _buildMetricTile(
-                  icon: Icons.build,
-                  label: 'Services Done',
-                  value: '${snapshot.data!.docs.length}',
-                ),
-                _buildMetricTile(
-                  icon: Icons.star,
-                  label: 'Most Common',
-                  value: mostCommonService,
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildRecentServices() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Recent Services',
-          style: Theme.of(context).textTheme.titleLarge,
-        ),
-        const SizedBox(height: 8),
-        StreamBuilder<QuerySnapshot>(
-          stream: _firestore
-              .collection('services')
-              .where('userId', isEqualTo: _userId)
-              .orderBy('serviceDate', descending: true)
-              .limit(5)
-              .snapshots(),
-          builder: (context, snapshot) {
-            if (!snapshot.hasData) return _buildLoading();
-
-            return ListView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: snapshot.data!.docs.length,
-              itemBuilder: (context, index) {
-                final doc = snapshot.data!.docs[index];
-                final data = doc.data() as Map<String, dynamic>;
-
-                return ListTile(
-                  leading: const Icon(Icons.build),
-                  title: Text(data['serviceType'] ?? 'Unknown Service'),
-                  subtitle: Text(
-                    DateFormat.yMMMd().format(
-                      DateFormat('yyyy-MM-dd').parse(data['serviceDate']),
-                    ),
-                  ),
-                  trailing: Text(
-                    '${NumberFormat.currency(symbol: 'LKR ').format(data['cost'])}',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
                   ),
                 );
               },
@@ -457,31 +394,18 @@ class _StatsScreenState extends State<StatsScreen>
     final tips = [
       {
         'title': 'Proper Tire Pressure',
-        'description':
-            'Maintain recommended pressure (check monthly) for 3% better mileage',
+        'description': 'Maintain recommended pressure for better mileage',
         'icon': Icons.tire_repair,
       },
       {
         'title': 'Smooth Acceleration',
-        'description':
-            'Avoid rapid starts - gentle acceleration saves 10-15% fuel',
+        'description': 'Gentle acceleration saves 10-15% fuel',
         'icon': Icons.speed,
       },
       {
         'title': 'Reduce Idling',
         'description': 'Turn off engine if stopped for more than 30 seconds',
         'icon': Icons.timer_off,
-      },
-      {
-        'title': 'Regular Maintenance',
-        'description':
-            'Clean air filters and proper oil changes improve efficiency',
-        'icon': Icons.build,
-      },
-      {
-        'title': 'Reduce Weight',
-        'description': 'Every 50kg reduces efficiency by 1-2%',
-        'icon': Icons.fitness_center,
       },
     ];
 
@@ -523,16 +447,74 @@ class _StatsScreenState extends State<StatsScreen>
     );
   }
 
+  Widget _buildMetricTile({
+    required IconData icon,
+    required String label,
+    required String value,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Row(
+        children: [
+          Icon(icon, size: 24, color: Theme.of(context).primaryColor),
+          const SizedBox(width: 16),
+          Expanded(child: Text(label)),
+          Text(
+            value,
+            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildErrorWidget(String error) {
+    final isIndexError =
+        error.contains('failed-precondition') && error.contains('index');
+
+    return Card(
+      color: Colors.red.shade50,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            const Icon(Icons.error_outline, color: Colors.red, size: 48),
+            const SizedBox(height: 16),
+            Text(
+              isIndexError
+                  ? 'Database Configuration Needed'
+                  : 'Error loading data',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              isIndexError ? 'Please contact support if this persists' : error,
+              style: Theme.of(context).textTheme.bodySmall,
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLoading() {
+    return const Padding(
+      padding: EdgeInsets.all(20),
+      child: Center(
+        child: CircularProgressIndicator(),
+      ),
+    );
+  }
+
   Future<void> _navigateToAddFuel(BuildContext context) async {
     await Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => const AddFuelScreen()),
     );
     setState(() {});
-  }
-
-  Widget _buildLoading() {
-    return const Center(child: CircularProgressIndicator());
   }
 }
 
@@ -553,6 +535,7 @@ class _AddFuelScreenState extends State<AddFuelScreen>
   final TextEditingController _odometerController = TextEditingController();
   final TextEditingController _dateController = TextEditingController();
   bool _isFullTank = true;
+  bool _isSubmitting = false;
 
   @override
   void initState() {
@@ -595,9 +578,15 @@ class _AddFuelScreenState extends State<AddFuelScreen>
 
   Future<void> _submitForm() async {
     if (_formKey.currentState!.validate()) {
+      setState(() {
+        _isSubmitting = true;
+      });
+
       try {
         final user = FirebaseAuth.instance.currentUser;
-        if (user == null) return;
+        if (user == null) {
+          throw Exception('You need to be logged in to add a fuel entry');
+        }
 
         await FirebaseFirestore.instance.collection('fuel_entries').add({
           'liters': double.parse(_litersController.text),
@@ -613,6 +602,10 @@ class _AddFuelScreenState extends State<AddFuelScreen>
         if (!mounted) return;
         Navigator.pop(context);
       } catch (e) {
+        setState(() {
+          _isSubmitting = false;
+        });
+
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -703,11 +696,13 @@ class _AddFuelScreenState extends State<AddFuelScreen>
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: _submitForm,
+                    onPressed: _isSubmitting ? null : _submitForm,
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 16),
                     ),
-                    child: const Text('SAVE FUEL ENTRY'),
+                    child: _isSubmitting
+                        ? const CircularProgressIndicator()
+                        : const Text('SAVE FUEL ENTRY'),
                   ),
                 ),
               ],

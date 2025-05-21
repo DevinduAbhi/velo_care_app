@@ -52,7 +52,7 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
-      themeMode: themeNotifier.themeMode, // Changed back to themeMode
+      themeMode: themeNotifier.themeMode,
       initialRoute: '/',
       routes: {
         '/': (context) => LoginScreen(
